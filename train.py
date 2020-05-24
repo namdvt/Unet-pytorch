@@ -1,6 +1,7 @@
 import torch
 import torch.optim as optim
 from torchvision import transforms
+import torch.nn as nn
 
 from helper import write_log, write_figures
 import numpy as np
@@ -9,12 +10,15 @@ from dataset import get_loader
 from model import Model
 from tqdm import tqdm
 
+import tifffile
+
 import matplotlib.pyplot as plt
+from PIL import Image
 
 import torch.nn.functional as F
 
 
-def fit(epoch, model, optimizer, device, data_loader, phase='training'):
+def fit(epoch, model, optimizer, criterion, device, data_loader, phase='training'):
     if phase == 'training':
         model.train()
     else:
@@ -33,7 +37,10 @@ def fit(epoch, model, optimizer, device, data_loader, phase='training'):
             with torch.no_grad():
                 outputs = model(inputs)
 
-        loss = F.binary_cross_entropy_with_logits(outputs, targets)
+        outputs[outputs >= 0.5] = 1
+        outputs[outputs < 0.5] = 0
+
+        loss = criterion(outputs, targets)
         running_loss += loss.item()
 
         if phase == 'training':
@@ -52,20 +59,19 @@ def train():
     batch_size = 2
     num_epochs = 200
     learning_rate = 0.01
-    root = 'data/'
 
-    transform = transforms.Compose([transforms.Resize([256, 256]),
-                                    transforms.ToTensor()])
-
-    train_loader, val_loader = get_loader(root, batch_size=batch_size, transform=transform, shuffle=True)
+    # transform = transforms.ToTensor()
+    transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize([64, 64]), transforms.ToTensor()])
+    train_loader, val_loader = get_loader(batch_size=batch_size, transform=transform, shuffle=True)
 
     optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
     scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 10, 2)
+    criterion = nn.BCEWithLogitsLoss()
     
     train_losses, val_losses = [], []
     for epoch in range(num_epochs):
-        train_epoch_loss = fit(epoch, model, optimizer, device, train_loader, phase='training')
-        val_epoch_loss = fit(epoch, model, optimizer, device, val_loader, phase='validation')
+        train_epoch_loss = fit(epoch, model, optimizer, criterion, device, train_loader, phase='training')
+        val_epoch_loss = fit(epoch, model, optimizer, criterion, device, val_loader, phase='validation')
         print('-----------------------------------------')
 
         if epoch == 0 or val_epoch_loss <= np.min(val_losses):

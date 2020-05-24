@@ -47,7 +47,7 @@ class DoubleConv2d(nn.Module):
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
-        self.conv1 = DoubleConv2d(3, 64, kernel_size=3, padding=1)
+        self.conv1 = DoubleConv2d(1, 64, kernel_size=3, padding=1)
         self.conv2 = DoubleConv2d(64, 128, kernel_size=3, padding=1)
         self.conv3 = DoubleConv2d(128, 256, kernel_size=3, padding=1)
         self.conv4 = DoubleConv2d(256, 512, kernel_size=3, padding=1)
@@ -76,7 +76,7 @@ class Decoder(nn.Module):
         self.conv3 = DoubleConv2d(256, 128, kernel_size=3, padding=1)
         self.conv4 = DoubleConv2d(128, 64, kernel_size=3, padding=1)
 
-        self.conv1x1 = Conv2d(64, 3, kernel_size=1, stride=1, padding=0, bias=True)
+        self.conv1x1 = Conv2d(64, 1, kernel_size=1, stride=1, padding=0, bias=True)
 
     def forward(self, out1, out2, out3, out4, x):
         x = self.upconv1(x)
