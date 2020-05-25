@@ -1,21 +1,12 @@
 import torch
 import torch.optim as optim
 from torchvision import transforms
-import torch.nn as nn
-
 from helper import write_log, write_figures
 import numpy as np
 from dataset import get_loader
-
 from model import Model
 from tqdm import tqdm
-
-import tifffile
-
-import matplotlib.pyplot as plt
-from PIL import Image
-
-import torch.nn.functional as F
+from loss import DiceLoss
 
 
 def fit(epoch, model, optimizer, criterion, device, data_loader, phase='training'):
@@ -37,9 +28,6 @@ def fit(epoch, model, optimizer, criterion, device, data_loader, phase='training
             with torch.no_grad():
                 outputs = model(inputs)
 
-        outputs[outputs >= 0.5] = 1
-        outputs[outputs < 0.5] = 0
-
         loss = criterion(outputs, targets)
         running_loss += loss.item()
 
@@ -58,15 +46,15 @@ def train():
     model = Model().to(device)
     batch_size = 2
     num_epochs = 200
-    learning_rate = 0.01
+    learning_rate = 0.1
 
     # transform = transforms.ToTensor()
     transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize([64, 64]), transforms.ToTensor()])
     train_loader, val_loader = get_loader(batch_size=batch_size, transform=transform, shuffle=True)
 
     optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
-    scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, 10, 2)
-    criterion = nn.BCEWithLogitsLoss()
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    criterion = DiceLoss(smooth=1.)
     
     train_losses, val_losses = [], []
     for epoch in range(num_epochs):
@@ -83,7 +71,7 @@ def train():
         write_figures('output', train_losses, val_losses)
         write_log('output', epoch, train_epoch_loss, val_epoch_loss)
 
-        scheduler.step(epoch)
+        scheduler.step(val_epoch_loss)
 
 
 if __name__ == "__main__":

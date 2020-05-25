@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-from torchvision import models
-import torch.nn.functional as F
 
 
 class Conv2d(nn.Module):
@@ -9,7 +7,7 @@ class Conv2d(nn.Module):
         super(Conv2d, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding, bias=bias)
         self.bn = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
 
     def forward(self, x):
         x = self.conv(x)
@@ -23,7 +21,7 @@ class UpConv2d(nn.Module):
         super(UpConv2d, self).__init__()
         self.conv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride=stride, padding=padding, bias=bias)
         self.bn = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=False)
 
     def forward(self, x):
         x = self.conv(x)

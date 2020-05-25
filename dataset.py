@@ -1,9 +1,6 @@
 from torch.utils.data import Dataset, DataLoader, random_split
-from PIL import Image
-from torchvision import transforms
 import numpy as np
 import tifffile
-import matplotlib.pyplot as plt
 
 
 class ISBIDataset(Dataset):
@@ -18,10 +15,10 @@ class ISBIDataset(Dataset):
         target = self.targets[index]
 
         if self.transform:
-            input_image = self.transform(image)
-            target_mask = self.transform(target)
+            image = self.transform(image)
+            target = self.transform(target)
 
-        return input_image, target_mask
+        return image, target
 
     def __len__(self):
         return len(self.images)
@@ -45,12 +42,3 @@ def get_loader(batch_size, shuffle=True, transform=None):
                             drop_last=True)
 
     return train_loader, val_loader
-
-
-if __name__ == '__main__':
-    # transform = transforms.ToTensor()
-    transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize([128, 128]), transforms.ToTensor()])
-    train_loader, val_loader = get_loader(batch_size=2, transform=transform, shuffle=True)
-    for input_image, target_mask in train_loader:
-        print()
-    print()
