@@ -13,7 +13,7 @@ model.eval()
 if __name__ == '__main__':
     inputs = torch.tensor(np.expand_dims(tifffile.TiffFile('data/ISBI/test-volume.tif').asarray(), axis=1) / 255)
     with torch.no_grad():
-        outputs = model(inputs[0:2].float().to(device))
+        outputs = model(inputs.float().to(device))
         outputs[outputs >= 0.5] = 1
         outputs[outputs < 0.5] = 0
 

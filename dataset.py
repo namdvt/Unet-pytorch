@@ -1,22 +1,45 @@
 from torch.utils.data import Dataset, DataLoader, random_split
 import numpy as np
 import tifffile
+import torchvision.transforms.functional as F
+import random
 
 
 class ISBIDataset(Dataset):
-    def __init__(self, transform):
+    def __init__(self):
         super().__init__()
         self.images = np.expand_dims(tifffile.TiffFile('data/ISBI/train-volume.tif').asarray(), axis=3)
         self.targets = np.expand_dims(tifffile.TiffFile('data/ISBI/train-labels.tif').asarray(), axis=3)
-        self.transform = transform
 
     def __getitem__(self, index):
-        image = self.images[index]
-        target = self.targets[index]
+        image = F.to_pil_image(self.images[index])
+        target = F.to_pil_image(self.targets[index])
 
-        if self.transform:
-            image = self.transform(image)
-            target = self.transform(target)
+        # augmentation
+        rotate = random.randint(0, 3)
+        if rotate == 1:
+            image = F.rotate(image, 180, fill=(0,))
+            target = F.rotate(target, 180, fill=(0,))
+        if rotate == 2:
+            image = F.rotate(image, 90, fill=(0,))
+            target = F.rotate(target, 90, fill=(0,))
+        if rotate == 3:
+            image = F.rotate(image, -90, fill=(0,))
+            target = F.rotate(target, -90, fill=(0,))
+
+        flip = random.randint(0, 2)
+        if flip == 1:
+            image = F.hflip(image)
+            target = F.hflip(target)
+        if flip == 2:
+            image = F.vflip(image)
+            target = F.vflip(target)
+
+        # image = F.resize(image, [64, 64])
+        # target = F.resize(target, [64, 64])
+
+        image = F.to_tensor(image)
+        target = F.to_tensor(target)
 
         return image, target
 
@@ -24,8 +47,8 @@ class ISBIDataset(Dataset):
         return len(self.images)
 
 
-def get_loader(batch_size, shuffle=True, transform=None):
-    dataset = ISBIDataset(transform=transform)
+def get_loader(batch_size, shuffle=True):
+    dataset = ISBIDataset()
 
     num_train = int(len(dataset) * 0.8)
     num_val = len(dataset) - num_train

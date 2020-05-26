@@ -1,6 +1,5 @@
 import torch
 import torch.optim as optim
-from torchvision import transforms
 from helper import write_log, write_figures
 import numpy as np
 from dataset import get_loader
@@ -45,12 +44,10 @@ def train():
     device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
     model = Model().to(device)
     batch_size = 2
-    num_epochs = 200
+    num_epochs = 100
     learning_rate = 0.1
 
-    # transform = transforms.ToTensor()
-    transform = transforms.Compose([transforms.ToPILImage(), transforms.Resize([64, 64]), transforms.ToTensor()])
-    train_loader, val_loader = get_loader(batch_size=batch_size, transform=transform, shuffle=True)
+    train_loader, val_loader = get_loader(batch_size=batch_size, shuffle=True)
 
     optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
@@ -63,7 +60,7 @@ def train():
         print('-----------------------------------------')
 
         if epoch == 0 or val_epoch_loss <= np.min(val_losses):
-            torch.save(model.state_dict(), 'output/weight.pth')
+            torch.save(model.state_dict(), 'output/weight_sigmoid.pth')
 
         train_losses.append(train_epoch_loss)
         val_losses.append(val_epoch_loss)
