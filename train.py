@@ -60,7 +60,7 @@ def train():
         print('-----------------------------------------')
 
         if epoch == 0 or val_epoch_loss <= np.min(val_losses):
-            torch.save(model.state_dict(), 'output/weight_sigmoid.pth')
+            torch.save(model.state_dict(), 'output/weight.pth')
 
         train_losses.append(train_epoch_loss)
         val_losses.append(val_epoch_loss)
