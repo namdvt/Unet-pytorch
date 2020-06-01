@@ -8,8 +8,8 @@ class DiceLoss(nn.Module):
         super(DiceLoss, self).__init__()
         self.smooth = smooth
 
-    def forward(self, targets, outputs):
-        targets = torch.sigmoid(targets)
+    def forward(self, outputs, targets):
+        outputs = torch.sigmoid(outputs)
 
         numerator = 2 * torch.sum(outputs * targets) + self.smooth
         denominator = torch.sum(outputs ** 2) + torch.sum(targets ** 2) + self.smooth
